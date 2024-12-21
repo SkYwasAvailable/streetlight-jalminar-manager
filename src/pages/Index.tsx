@@ -1,6 +1,5 @@
 import { BottomNav } from "@/components/BottomNav";
 import { CategoryCard } from "@/components/CategoryCard";
-import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
@@ -24,13 +23,12 @@ const Index = () => {
         </div>
 
         <div className="mt-8 text-center">
-          <Button
-            variant="outline"
-            className="w-full max-w-xs"
+          <button
+            className="w-full max-w-xs py-3 px-4 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium shadow-sm hover:bg-gray-50 transition-colors"
             onClick={() => console.log("Admin login clicked")}
           >
             Admin Login
-          </Button>
+          </button>
         </div>
       </div>
       <BottomNav />

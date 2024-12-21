@@ -10,7 +10,7 @@ export const CategoryCard = ({ title, image, link }: CategoryCardProps) => {
   return (
     <Link
       to={link}
-      className="block w-full bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105"
+      className="block w-full bg-white rounded-lg shadow-md overflow-hidden transition-transform active:scale-95 touch-manipulation"
     >
       <div className="relative h-40">
         <img
