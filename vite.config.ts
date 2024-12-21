@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
+    include: ['react-native-web'],
     esbuildOptions: {
       resolveExtensions: ['.web.js', '.js', '.ts', '.jsx', '.tsx'],
     },
