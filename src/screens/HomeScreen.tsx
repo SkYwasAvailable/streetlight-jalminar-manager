@@ -35,7 +35,7 @@ export const HomeScreen = () => {
           <TouchableOpacity
             key={index}
             style={styles.card}
-            onPress={() => navigation.navigate(category.link)}
+            onPress={() => navigation.navigate(category.link as keyof RootStackParamList)}
           >
             <Image
               source={{ uri: category.image }}
