@@ -8,8 +8,20 @@ import { HomeScreen } from '@/screens/HomeScreen';
 import { ReportsScreen } from '@/screens/ReportsScreen';
 import { AdminDashboardScreen } from '@/screens/AdminDashboardScreen';
 
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+type RootStackParamList = {
+  PhoneAuth: undefined;
+  AdminLogin: undefined;
+  Main: undefined;
+  AdminDashboard: undefined;
+};
+
+type TabParamList = {
+  Home: undefined;
+  Reports: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 const MainTabs = () => {
   return (
