@@ -1,106 +1,85 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  AdminDashboard: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const AdminLoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation<NavigationProp>();
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
-      
+
       if (error) throw error;
-      navigation.navigate('AdminDashboard');
+
+      // Check if user is admin
+      const { data: adminData, error: adminError } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+
+      if (adminError) throw adminError;
+
+      if (!adminData?.is_admin) {
+        throw new Error('Not authorized as admin');
+      }
+
+      navigate('/admin-dashboard');
     } catch (error) {
       console.error('Error logging in:', error);
+      alert(error.message);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Admin Login</Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backButtonText}>Back to Phone Login</Text>
-      </TouchableOpacity>
-    </View>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            Admin Login
+          </h2>
+        </div>
+
+        <div className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            />
+            <Button
+              onClick={handleLogin}
+              className="w-full"
+            >
+              Login
+            </Button>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="w-full mt-4"
+        >
+          Back to Phone Login
+        </Button>
+      </div>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  backButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: '#007AFF',
-    fontSize: 14,
-  },
-});
