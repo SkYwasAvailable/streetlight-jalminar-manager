@@ -4,6 +4,7 @@ import { PhoneAuthScreen } from '@/screens/PhoneAuthScreen';
 import { AdminLoginScreen } from '@/screens/AdminLoginScreen';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { ReportsScreen } from '@/screens/ReportsScreen';
+import { CategoryScreen } from '@/screens/CategoryScreen';
 
 export const AppNavigator = () => {
   return (
@@ -13,6 +14,7 @@ export const AppNavigator = () => {
         <Route path="/admin-login" element={<AdminLoginScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/reports" element={<ReportsScreen />} />
+        <Route path="/category/:type" element={<CategoryScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

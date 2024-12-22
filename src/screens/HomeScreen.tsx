@@ -7,12 +7,12 @@ export const HomeScreen = () => {
     {
       title: 'Street Light',
       image: 'https://images.unsplash.com/photo-1542662565-7e4b66bae529?auto=format&fit=crop&w=800',
-      link: '/street-lights'
+      link: '/category/Street Light'
     },
     {
       title: 'Jalminar',
       image: 'https://images.unsplash.com/photo-1576461419288-41be1a568c6b?auto=format&fit=crop&w=800',
-      link: '/jalminars'
+      link: '/category/Jalminar'
     }
   ];
 
