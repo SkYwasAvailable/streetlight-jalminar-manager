@@ -6,6 +6,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { LightbulbIcon, BuildingIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { Tables } from '@/integrations/supabase/types/tables';
 
 export const CategoryScreen = () => {
   const { type } = useParams();
@@ -21,7 +22,7 @@ export const CategoryScreen = () => {
         .order('name');
         
       if (error) throw error;
-      return data;
+      return data as Tables<'items'>[];
     },
   });
 
@@ -68,7 +69,9 @@ export const CategoryScreen = () => {
                 
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
                   <p>Location: {item.location}</p>
-                  <p>Last Serviced: {format(new Date(item.last_serviced), 'PPP')}</p>
+                  {item.last_serviced && (
+                    <p>Last Serviced: {format(new Date(item.last_serviced), 'PPP')}</p>
+                  )}
                 </div>
                 
                 <Button

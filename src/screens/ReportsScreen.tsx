@@ -4,6 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { BottomNav } from '@/components/BottomNav';
 import { LightbulbIcon, BuildingIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { Tables } from '@/integrations/supabase/types/tables';
+
+type ReportWithItem = Tables<'reports'> & {
+  items: Tables<'items'>
+}
 
 export const ReportsScreen = () => {
   const { data: reports, isLoading } = useQuery({
@@ -16,13 +21,13 @@ export const ReportsScreen = () => {
         .from('reports')
         .select(`
           *,
-          items (name, type, last_serviced)
+          items (*)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as ReportWithItem[];
     },
   });
 
@@ -64,13 +69,15 @@ export const ReportsScreen = () => {
                 </div>
                 
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
-                  <p>Last Serviced: {format(new Date(report.items.last_serviced), 'PPP')}</p>
+                  {report.items.last_serviced && (
+                    <p>Last Serviced: {format(new Date(report.items.last_serviced), 'PPP')}</p>
+                  )}
                   <p>Reported on: {format(new Date(report.created_at), 'PPP')}</p>
                 </div>
                 
                 <div className="mt-3">
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
-                    {report.status}
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status || '')}`}>
+                    {report.status || 'Not Solved'}
                   </span>
                 </div>
               </div>
