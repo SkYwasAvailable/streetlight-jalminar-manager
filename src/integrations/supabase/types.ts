@@ -78,18 +78,21 @@ export type Database = {
           id: string
           is_admin: boolean | null
           phone_number: string
+          sign_up_count: number | null
         }
         Insert: {
           created_at?: string
           id: string
           is_admin?: boolean | null
           phone_number: string
+          sign_up_count?: number | null
         }
         Update: {
           created_at?: string
           id?: string
           is_admin?: boolean | null
           phone_number?: string
+          sign_up_count?: number | null
         }
         Relationships: []
       }

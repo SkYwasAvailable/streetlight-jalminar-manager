@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -107,12 +107,12 @@ export const PhoneAuthScreen = () => {
         </div>
       </div>
 
-      <TouchableOpacity
-        className="absolute bottom-4 right-4"
+      <div 
         onClick={() => navigate('/admin-login')}
+        className="absolute bottom-4 right-4 cursor-pointer text-blue-600 text-sm hover:text-blue-800"
       >
-        <Text className="text-blue-600 text-sm">Admin Login</Text>
-      </TouchableOpacity>
+        Admin Login
+      </div>
     </div>
   );
 };
