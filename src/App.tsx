@@ -1,14 +1,15 @@
-import React from 'react';
-import { AppNavigator } from './navigation/AppNavigator';
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
-import { supabase } from './integrations/supabase/client';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AppNavigator } from "./navigation/AppNavigator";
+import "./App.css";
 
-const App = () => {
+const queryClient = new QueryClient();
+
+function App() {
   return (
-    <SessionContextProvider supabaseClient={supabase}>
+    <QueryClientProvider client={queryClient}>
       <AppNavigator />
-    </SessionContextProvider>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;
