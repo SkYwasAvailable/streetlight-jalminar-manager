@@ -10,7 +10,7 @@ export const BottomNav = () => {
         <Link
           to="/"
           className={`flex flex-col items-center p-2 ${
-            location.pathname === "/" ? "text-[#0EA5E9]" : "text-gray-500"
+            location.pathname === "/home" ? "text-[#0EA5E9]" : "text-gray-500"
           }`}
         >
           <Home className="w-6 h-6" />
