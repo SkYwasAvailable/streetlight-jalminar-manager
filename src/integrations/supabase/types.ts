@@ -16,6 +16,7 @@ export type Database = {
           last_serviced: string | null
           location: string | null
           name: string
+          status: string | null
           type: string
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           last_serviced?: string | null
           location?: string | null
           name: string
+          status?: string | null
           type: string
         }
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           last_serviced?: string | null
           location?: string | null
           name?: string
+          status?: string | null
           type?: string
         }
         Relationships: []

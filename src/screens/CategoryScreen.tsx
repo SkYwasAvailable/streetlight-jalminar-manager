@@ -19,6 +19,7 @@ export const CategoryScreen = () => {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['items', type, searchQuery],
     queryFn: async () => {
+      console.log('Fetching items with search query:', searchQuery);
       const query = supabase
         .from('items')
         .select(`
@@ -32,8 +33,11 @@ export const CategoryScreen = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
-
+      if (error) {
+        console.error('Error fetching items:', error);
+        throw error;
+      }
+      console.log('Fetched items:', data);
       return data.map(item => ({
         ...item,
         reports: { count: item.reports[0]?.count || 0 }
@@ -43,6 +47,19 @@ export const CategoryScreen = () => {
 
   const createReport = useMutation({
     mutationFn: async (itemId: string) => {
+      console.log('Creating report for item:', itemId);
+      // First update the item status
+      const { error: itemError } = await supabase
+        .from('items')
+        .update({ status: 'Problem' })
+        .eq('id', itemId);
+
+      if (itemError) {
+        console.error('Error updating item status:', itemError);
+        throw itemError;
+      }
+
+      // Then create the report
       const { error } = await supabase
         .from('reports')
         .insert([{
@@ -50,7 +67,10 @@ export const CategoryScreen = () => {
           status: 'Problem'
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating report:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
@@ -61,7 +81,8 @@ export const CategoryScreen = () => {
       });
       navigate('/reports');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Error",
         description: "Failed to submit report. Please try again.",
@@ -69,6 +90,19 @@ export const CategoryScreen = () => {
       });
     },
   });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Problem':
+        return 'text-red-500';
+      case 'Technician Assigned':
+        return 'text-yellow-500';
+      case 'Solved':
+        return 'text-green-500';
+      default:
+        return 'text-gray-500';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -92,13 +126,18 @@ export const CategoryScreen = () => {
           <div className="space-y-4">
             {items.map((item) => (
               <div key={item.id} className="bg-white p-4 rounded-lg shadow">
-                <div className="flex items-center gap-3">
-                  {item.type === 'Street Light' ? (
-                    <LightbulbIcon className="w-6 h-6 text-blue-500" />
-                  ) : (
-                    <BuildingIcon className="w-6 h-6 text-blue-500" />
-                  )}
-                  <h3 className="font-semibold">{item.name}</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {item.type === 'Street Light' ? (
+                      <LightbulbIcon className="w-6 h-6 text-blue-500" />
+                    ) : (
+                      <BuildingIcon className="w-6 h-6 text-blue-500" />
+                    )}
+                    <h3 className="font-semibold">{item.name}</h3>
+                  </div>
+                  <span className={`font-medium ${getStatusColor(item.status)}`}>
+                    {item.status}
+                  </span>
                 </div>
                 
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
@@ -110,7 +149,10 @@ export const CategoryScreen = () => {
                 </div>
                 
                 <Button
-                  onClick={() => createReport.mutate(item.id)}
+                  onClick={() => {
+                    console.log('Report button clicked for item:', item.id);
+                    createReport.mutate(item.id);
+                  }}
                   className="mt-3 w-full"
                   variant="destructive"
                 >
