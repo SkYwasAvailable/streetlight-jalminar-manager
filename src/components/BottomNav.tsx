@@ -8,7 +8,7 @@ export const BottomNav = () => {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 shadow-lg">
       <div className="flex justify-around items-center max-w-md mx-auto">
         <Link
-          to="/"
+          to="/home"
           className={`flex flex-col items-center p-2 ${
             location.pathname === "/home" ? "text-[#0EA5E9]" : "text-gray-500"
           }`}
