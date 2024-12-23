@@ -18,7 +18,7 @@ export interface Report {
 
 export interface User {
   id: string;
-  phone_number: string;
+  email: string;
   is_admin: boolean | null;
   created_at: string | null;
   sign_up_count: number | null;

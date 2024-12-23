@@ -1,20 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BottomNav } from '@/components/BottomNav';
-import { LightbulbIcon, BuildingIcon } from 'lucide-react';
+import { LightbulbIcon, BuildingIcon, SearchIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { Tables } from '@/integrations/supabase/types/tables';
-
-type ReportWithItem = Tables<'reports'> & {
-  items: Tables<'items'>;
-}
+import { Input } from '@/components/ui/input';
 
 export const ReportsScreen = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+
   const { data: reports, isLoading } = useQuery({
-    queryKey: ['reports'],
+    queryKey: ['reports', searchQuery],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const query = supabase
         .from('reports')
         .select(`
           *,
@@ -22,8 +20,13 @@ export const ReportsScreen = () => {
         `)
         .order('created_at', { ascending: false });
 
+      if (searchQuery) {
+        query.textSearch('items.name', searchQuery);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return data as ReportWithItem[];
+      return data;
     },
   });
 
@@ -45,6 +48,17 @@ export const ReportsScreen = () => {
       <div className="container max-w-md mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Reports</h1>
         
+        <div className="relative mb-6">
+          <Input
+            type="search"
+            placeholder="Search reports..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        </div>
+        
         {isLoading ? (
           <div className="text-center py-4">Loading reports...</div>
         ) : reports?.length === 0 ? (
@@ -65,6 +79,7 @@ export const ReportsScreen = () => {
                 </div>
                 
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
+                  <p>Location: {report.items?.location}</p>
                   {report.items?.last_serviced && (
                     <p>Last Serviced: {format(new Date(report.items.last_serviced), 'PPP')}</p>
                   )}

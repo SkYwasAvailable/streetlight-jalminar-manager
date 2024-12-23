@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BottomNav } from '@/components/BottomNav';
 import { LightbulbIcon, BuildingIcon, SearchIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tables } from '@/integrations/supabase/types/tables';
 import { useToast } from '@/hooks/use-toast';
 
 export const CategoryScreen = () => {
@@ -15,61 +14,61 @@ export const CategoryScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const queryClient = useQueryClient();
   
-  const { data: items, isLoading } = useQuery({
-    queryKey: ['items', type],
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['items', type, searchQuery],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const query = supabase
         .from('items')
         .select(`
           *,
-          reports:reports(count)
+          reports: reports(count)
         `)
-        .eq('type', type)
-        .ilike('name', `%${searchQuery}%`)
-        .order('name');
-        
+        .eq('type', type);
+
+      if (searchQuery) {
+        query.ilike('name', `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return data as (Tables<'items'> & { reports: { count: number } })[];
+
+      return data.map(item => ({
+        ...item,
+        reports: { count: item.reports[0]?.count || 0 }
+      }));
     },
   });
 
-  const handleReport = async (itemId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to report an issue",
-          variant: "destructive",
-        });
-        return;
-      }
-
+  const createReport = useMutation({
+    mutationFn: async (itemId: string) => {
       const { error } = await supabase
         .from('reports')
-        .insert({
-          user_id: user.id,
+        .insert([{
           item_id: itemId,
-        });
+          status: 'Problem'
+        }]);
 
       if (error) throw error;
-      
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
       toast({
         title: "Report submitted",
         description: "Thank you for reporting this issue",
       });
-      
       navigate('/reports');
-    } catch (error) {
-      console.error('Error creating report:', error);
+    },
+    onError: () => {
       toast({
         title: "Error",
-        description: "Failed to create report. Please try again.",
+        description: "Failed to submit report. Please try again.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -91,7 +90,7 @@ export const CategoryScreen = () => {
           <div className="text-center py-4">Loading items...</div>
         ) : (
           <div className="space-y-4">
-            {items?.map((item) => (
+            {items.map((item) => (
               <div key={item.id} className="bg-white p-4 rounded-lg shadow">
                 <div className="flex items-center gap-3">
                   {item.type === 'Street Light' ? (
@@ -107,11 +106,11 @@ export const CategoryScreen = () => {
                   {item.last_serviced && (
                     <p>Last Serviced: {format(new Date(item.last_serviced), 'PPP')}</p>
                   )}
-                  <p>Reports: {item.reports?.[0]?.count || 0}</p>
+                  <p>Reports: {item.reports.count}</p>
                 </div>
                 
                 <Button
-                  onClick={() => handleReport(item.id)}
+                  onClick={() => createReport.mutate(item.id)}
                   className="mt-3 w-full"
                   variant="destructive"
                 >

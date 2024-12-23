@@ -15,7 +15,7 @@ export const AppNavigator = () => {
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/reports" element={<ReportsScreen />} />
         <Route path="/category/:type" element={<CategoryScreen />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Router>
   );
