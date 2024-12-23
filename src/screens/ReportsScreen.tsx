@@ -7,23 +7,19 @@ import { format } from 'date-fns';
 import { Tables } from '@/integrations/supabase/types/tables';
 
 type ReportWithItem = Tables<'reports'> & {
-  items: Tables<'items'>
+  items: Tables<'items'>;
 }
 
 export const ReportsScreen = () => {
   const { data: reports, isLoading } = useQuery({
     queryKey: ['reports'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('reports')
         .select(`
           *,
           items (*)
         `)
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -31,7 +27,7 @@ export const ReportsScreen = () => {
     },
   });
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'Problem':
         return 'bg-red-100 text-red-800';
@@ -47,7 +43,7 @@ export const ReportsScreen = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="container max-w-md mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Your Reports</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Reports</h1>
         
         {isLoading ? (
           <div className="text-center py-4">Loading reports...</div>
@@ -60,23 +56,23 @@ export const ReportsScreen = () => {
             {reports?.map((report) => (
               <div key={report.id} className="bg-white p-4 rounded-lg shadow">
                 <div className="flex items-center gap-3">
-                  {report.items.type === 'Street Light' ? (
+                  {report.items?.type === 'Street Light' ? (
                     <LightbulbIcon className="w-6 h-6 text-blue-500" />
                   ) : (
                     <BuildingIcon className="w-6 h-6 text-blue-500" />
                   )}
-                  <h3 className="font-semibold">{report.items.name}</h3>
+                  <h3 className="font-semibold">{report.items?.name}</h3>
                 </div>
                 
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
-                  {report.items.last_serviced && (
+                  {report.items?.last_serviced && (
                     <p>Last Serviced: {format(new Date(report.items.last_serviced), 'PPP')}</p>
                   )}
-                  <p>Reported on: {format(new Date(report.created_at), 'PPP')}</p>
+                  <p>Reported on: {format(new Date(report.created_at || ''), 'PPP')}</p>
                 </div>
                 
                 <div className="mt-3">
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status || '')}`}>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
                     {report.status || 'Not Solved'}
                   </span>
                 </div>

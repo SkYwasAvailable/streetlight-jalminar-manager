@@ -1,33 +1,25 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
-
 export interface Item {
-  id: string
-  type: string
-  name: string
-  location: string | null
-  created_at: string
-  last_serviced: string | null
+  id: string;
+  type: 'Street Light' | 'Jalminar';
+  name: string;
+  location: string | null;
+  last_serviced: string | null;
+  created_at: string | null;
 }
 
 export interface Report {
-  id: string
-  user_id: string
-  item_id: string
-  status: string | null
-  created_at: string
-  items?: Item
+  id: string;
+  user_id: string | null;
+  item_id: string | null;
+  status: 'Problem' | 'Technician Assigned' | 'Solved' | null;
+  created_at: string | null;
+  items?: Item;
 }
 
 export interface User {
-  id: string
-  phone_number: string
-  is_admin: boolean | null
-  created_at: string
-  sign_up_count: number | null
+  id: string;
+  phone_number: string;
+  is_admin: boolean | null;
+  created_at: string | null;
+  sign_up_count: number | null;
 }
