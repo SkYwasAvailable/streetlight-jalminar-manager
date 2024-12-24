@@ -48,12 +48,7 @@ export const CategoryScreen = () => {
   const createReport = useMutation({
     mutationFn: async (itemId: string) => {
       console.log('Creating report for item:', itemId);
-      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
       // First update the item status
       const { error: itemError } = await supabase
         .from('items')
@@ -70,7 +65,6 @@ export const CategoryScreen = () => {
         .from('reports')
         .insert([{
           item_id: itemId,
-          user_id: user.id,
           status: 'Problem'
         }])
         .select();
