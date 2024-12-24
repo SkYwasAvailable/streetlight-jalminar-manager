@@ -1,23 +1,120 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { AdminBottomNav } from '@/components/AdminBottomNav';
+import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { useToast } from "@/components/ui/use-toast";
 
 export const AdminDashboardScreen = () => {
+  const { toast } = useToast();
+
+  const { data: reports = [], isLoading, refetch } = useQuery({
+    queryKey: ['admin-reports'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reports')
+        .select(`
+          *,
+          items (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const updateStatus = async (reportId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .update({ status: newStatus })
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status updated",
+        description: `Report status changed to ${newStatus}`,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update status",
+      });
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Problem':
+        return 'bg-red-100 text-red-800';
+      case 'Technician Assigned':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Solved':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Admin Dashboard</Text>
-    </View>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="container max-w-md mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
+
+        {isLoading ? (
+          <div className="text-center py-4">Loading reports...</div>
+        ) : (
+          <div className="space-y-4">
+            {reports.map((report) => (
+              <div key={report.id} className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold">
+                    {report.items?.name} ({report.items?.type})
+                  </h3>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status || '')}`}>
+                    {report.status}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  <p>Location: {report.items?.location}</p>
+                  <p>Reported: {format(new Date(report.created_at || ''), 'PPP')}</p>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    size="sm"
+                    variant={report.status === 'Problem' ? 'default' : 'outline'}
+                    onClick={() => updateStatus(report.id, 'Problem')}
+                  >
+                    Problem
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={report.status === 'Technician Assigned' ? 'default' : 'outline'}
+                    onClick={() => updateStatus(report.id, 'Technician Assigned')}
+                  >
+                    Assign Tech
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={report.status === 'Solved' ? 'default' : 'outline'}
+                    onClick={() => updateStatus(report.id, 'Solved')}
+                  >
+                    Solved
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <AdminBottomNav />
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-});
