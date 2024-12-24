@@ -48,6 +48,12 @@ export const CategoryScreen = () => {
   const createReport = useMutation({
     mutationFn: async (itemId: string) => {
       console.log('Creating report for item:', itemId);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       // First update the item status
       const { error: itemError } = await supabase
         .from('items')
@@ -60,26 +66,30 @@ export const CategoryScreen = () => {
       }
 
       // Then create the report
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('reports')
         .insert([{
           item_id: itemId,
+          user_id: user.id,
           status: 'Problem'
-        }]);
+        }])
+        .select();
 
       if (error) {
         console.error('Error creating report:', error);
         throw error;
       }
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       queryClient.invalidateQueries({ queryKey: ['reports'] });
       toast({
-        title: "Report submitted",
-        description: "Thank you for reporting this issue",
+        title: "Report Submitted Successfully",
+        description: "Thank you for reporting this issue. Our team will look into it.",
+        variant: "default",
       });
-      navigate('/reports');
     },
     onError: (error) => {
       console.error('Mutation error:', error);
@@ -155,8 +165,9 @@ export const CategoryScreen = () => {
                   }}
                   className="mt-3 w-full"
                   variant="destructive"
+                  disabled={createReport.isPending}
                 >
-                  Report Issue
+                  {createReport.isPending ? 'Submitting Report...' : 'Report Issue'}
                 </Button>
               </div>
             ))}
