@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminBottomNav } from '@/components/AdminBottomNav';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const AdminDashboardScreen = () => {
   const { toast } = useToast();
@@ -12,6 +12,7 @@ export const AdminDashboardScreen = () => {
   const { data: reports = [], isLoading, refetch } = useQuery({
     queryKey: ['admin-reports'],
     queryFn: async () => {
+      console.log('Fetching reports...');
       const { data, error } = await supabase
         .from('reports')
         .select(`
@@ -20,12 +21,17 @@ export const AdminDashboardScreen = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching reports:', error);
+        throw error;
+      }
+      console.log('Fetched reports:', data);
       return data;
     },
   });
 
   const updateStatus = async (reportId: string, newStatus: string) => {
+    console.log('Updating status:', { reportId, newStatus });
     try {
       const { error } = await supabase
         .from('reports')
