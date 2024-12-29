@@ -39,8 +39,12 @@ export const AdminDashboardScreen = () => {
         .update({ status: newStatus })
         .eq('id', itemId);
 
-      if (itemError) throw itemError;
+      if (itemError) {
+        console.error('Error updating item:', itemError);
+        throw itemError;
+      }
 
+      // Then handle the report based on the new status
       if (newStatus === 'Solved') {
         // If solved, delete the report
         const { error: deleteError } = await supabase
@@ -48,7 +52,10 @@ export const AdminDashboardScreen = () => {
           .delete()
           .eq('id', reportId);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error('Error deleting report:', deleteError);
+          throw deleteError;
+        }
 
         toast({
           title: "Report resolved",
@@ -61,7 +68,10 @@ export const AdminDashboardScreen = () => {
           .update({ status: newStatus })
           .eq('id', reportId);
 
-        if (reportError) throw reportError;
+        if (reportError) {
+          console.error('Error updating report:', reportError);
+          throw reportError;
+        }
 
         toast({
           title: "Status updated",
