@@ -30,23 +30,47 @@ export const AdminDashboardScreen = () => {
     },
   });
 
-  const updateStatus = async (reportId: string, newStatus: string) => {
-    console.log('Updating status:', { reportId, newStatus });
+  const updateStatus = async (reportId: string, itemId: string, newStatus: string) => {
+    console.log('Updating status:', { reportId, itemId, newStatus });
     try {
-      const { error } = await supabase
-        .from('reports')
+      // First update the item status
+      const { error: itemError } = await supabase
+        .from('items')
         .update({ status: newStatus })
-        .eq('id', reportId);
+        .eq('id', itemId);
 
-      if (error) throw error;
+      if (itemError) throw itemError;
 
-      toast({
-        title: "Status updated",
-        description: `Report status changed to ${newStatus}`,
-      });
+      if (newStatus === 'Solved') {
+        // If solved, delete the report
+        const { error: deleteError } = await supabase
+          .from('reports')
+          .delete()
+          .eq('id', reportId);
 
-      // Refetch the reports to update the UI
-      refetch();
+        if (deleteError) throw deleteError;
+
+        toast({
+          title: "Report resolved",
+          description: "The issue has been marked as solved and archived",
+        });
+      } else {
+        // Otherwise update the report status
+        const { error: reportError } = await supabase
+          .from('reports')
+          .update({ status: newStatus })
+          .eq('id', reportId);
+
+        if (reportError) throw reportError;
+
+        toast({
+          title: "Status updated",
+          description: `Report status changed to ${newStatus}`,
+        });
+      }
+
+      // Refetch to update the UI
+      await refetch();
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -97,21 +121,21 @@ export const AdminDashboardScreen = () => {
                   <Button
                     size="sm"
                     variant={report.status === 'Problem' ? 'default' : 'outline'}
-                    onClick={() => updateStatus(report.id, 'Problem')}
+                    onClick={() => updateStatus(report.id, report.items?.id, 'Problem')}
                   >
                     Problem
                   </Button>
                   <Button
                     size="sm"
                     variant={report.status === 'Technician Assigned' ? 'default' : 'outline'}
-                    onClick={() => updateStatus(report.id, 'Technician Assigned')}
+                    onClick={() => updateStatus(report.id, report.items?.id, 'Technician Assigned')}
                   >
                     Assign Tech
                   </Button>
                   <Button
                     size="sm"
                     variant={report.status === 'Solved' ? 'default' : 'outline'}
-                    onClick={() => updateStatus(report.id, 'Solved')}
+                    onClick={() => updateStatus(report.id, report.items?.id, 'Solved')}
                   >
                     Solved
                   </Button>
