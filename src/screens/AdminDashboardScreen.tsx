@@ -34,7 +34,7 @@ export const AdminDashboardScreen = () => {
   const updateStatus = async (reportId: string, itemId: string, newStatus: string) => {
     console.log('Updating status:', { reportId, itemId, newStatus });
     try {
-      // First update the item status
+      // Update the item status
       const { error: itemError } = await supabase
         .from('items')
         .update({ status: newStatus })
@@ -46,41 +46,22 @@ export const AdminDashboardScreen = () => {
       }
       console.log('Successfully updated item status');
 
-      if (newStatus === 'Solved') {
-        // If solved, delete the report
-        const { error: deleteError } = await supabase
-          .from('reports')
-          .delete()
-          .eq('id', reportId);
+      // Update the report status
+      const { error: reportError } = await supabase
+        .from('reports')
+        .update({ status: newStatus })
+        .eq('id', reportId);
 
-        if (deleteError) {
-          console.error('Error deleting report:', deleteError);
-          throw deleteError;
-        }
-        console.log('Successfully deleted report');
-
-        toast({
-          title: "Report resolved",
-          description: "The issue has been marked as solved and archived",
-        });
-      } else {
-        // Update the report status as well
-        const { error: reportError } = await supabase
-          .from('reports')
-          .update({ status: newStatus })
-          .eq('id', reportId);
-
-        if (reportError) {
-          console.error('Error updating report:', reportError);
-          throw reportError;
-        }
-        console.log('Successfully updated report status');
-
-        toast({
-          title: "Status updated",
-          description: `Report status changed to ${newStatus}`,
-        });
+      if (reportError) {
+        console.error('Error updating report:', reportError);
+        throw reportError;
       }
+      console.log('Successfully updated report status');
+
+      toast({
+        title: "Status updated",
+        description: `Status changed to ${newStatus}`,
+      });
 
       // Refetch to update the UI
       await refetch();
