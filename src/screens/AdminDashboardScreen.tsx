@@ -5,6 +5,7 @@ import { AdminBottomNav } from '@/components/AdminBottomNav';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
+import { LightbulbIcon, BuildingIcon } from 'lucide-react';
 
 export const AdminDashboardScreen = () => {
   const { toast } = useToast();
@@ -43,8 +44,8 @@ export const AdminDashboardScreen = () => {
         console.error('Error updating item:', itemError);
         throw itemError;
       }
+      console.log('Successfully updated item status');
 
-      // Then handle the report based on the new status
       if (newStatus === 'Solved') {
         // If solved, delete the report
         const { error: deleteError } = await supabase
@@ -56,13 +57,14 @@ export const AdminDashboardScreen = () => {
           console.error('Error deleting report:', deleteError);
           throw deleteError;
         }
+        console.log('Successfully deleted report');
 
         toast({
           title: "Report resolved",
           description: "The issue has been marked as solved and archived",
         });
       } else {
-        // Otherwise update the report status
+        // Update the report status as well
         const { error: reportError } = await supabase
           .from('reports')
           .update({ status: newStatus })
@@ -72,6 +74,7 @@ export const AdminDashboardScreen = () => {
           console.error('Error updating report:', reportError);
           throw reportError;
         }
+        console.log('Successfully updated report status');
 
         toast({
           title: "Status updated",
@@ -82,7 +85,7 @@ export const AdminDashboardScreen = () => {
       // Refetch to update the UI
       await refetch();
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error in updateStatus:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -91,7 +94,7 @@ export const AdminDashboardScreen = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'Problem':
         return 'bg-red-100 text-red-800';
@@ -111,23 +114,38 @@ export const AdminDashboardScreen = () => {
 
         {isLoading ? (
           <div className="text-center py-4">Loading reports...</div>
+        ) : reports.length === 0 ? (
+          <div className="bg-white p-4 rounded-lg shadow text-center">
+            <p className="text-gray-500">No reports to display</p>
+          </div>
         ) : (
           <div className="space-y-4">
             {reports.map((report) => (
               <div key={report.id} className="bg-white p-4 rounded-lg shadow">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold">
-                    {report.items?.name} ({report.items?.type})
-                  </h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status || '')}`}>
-                    {report.status}
+                <div className="flex items-center gap-3">
+                  {report.items?.type === 'Street Light' ? (
+                    <LightbulbIcon className="w-6 h-6 text-blue-500" />
+                  ) : (
+                    <BuildingIcon className="w-6 h-6 text-blue-500" />
+                  )}
+                  <h3 className="font-semibold">{report.items?.name}</h3>
+                </div>
+                
+                <div className="mt-2 space-y-1 text-sm text-gray-600">
+                  <p>Location: {report.items?.location}</p>
+                  {report.items?.last_serviced && (
+                    <p>Last Serviced: {format(new Date(report.items.last_serviced), 'PPP')}</p>
+                  )}
+                  <p>Reported on: {format(new Date(report.created_at || ''), 'PPP')}</p>
+                </div>
+
+                <div className="mt-3">
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
+                    {report.status || 'Not Solved'}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  <p>Location: {report.items?.location}</p>
-                  <p>Reported: {format(new Date(report.created_at || ''), 'PPP')}</p>
-                </div>
-                <div className="flex gap-2 mt-2">
+
+                <div className="flex gap-2 mt-4">
                   <Button
                     size="sm"
                     variant={report.status === 'Problem' ? 'default' : 'outline'}
