@@ -45,6 +45,7 @@ export const AdminDashboardScreen = () => {
         description: `Report status changed to ${newStatus}`,
       });
 
+      // Refetch the reports to update the UI
       refetch();
     } catch (error) {
       console.error('Error updating status:', error);
