@@ -34,29 +34,33 @@ export const AdminDashboardScreen = () => {
   const updateStatus = async (reportId: string, itemId: string, newStatus: string) => {
     console.log('Updating status:', { reportId, itemId, newStatus });
     try {
-      // Update the item status
-      const { error: itemError } = await supabase
-        .from('items')
-        .update({ status: newStatus })
-        .eq('id', itemId);
+      // Update both items and reports tables simultaneously
+      const [itemUpdate, reportUpdate] = await Promise.all([
+        // Update item status
+        supabase
+          .from('items')
+          .update({ status: newStatus })
+          .eq('id', itemId),
+        
+        // Update report status
+        supabase
+          .from('reports')
+          .update({ status: newStatus })
+          .eq('id', reportId)
+      ]);
 
-      if (itemError) {
-        console.error('Error updating item:', itemError);
-        throw itemError;
+      // Check for errors in either update
+      if (itemUpdate.error) {
+        console.error('Error updating item:', itemUpdate.error);
+        throw itemUpdate.error;
       }
-      console.log('Successfully updated item status');
 
-      // Update the report status
-      const { error: reportError } = await supabase
-        .from('reports')
-        .update({ status: newStatus })
-        .eq('id', reportId);
-
-      if (reportError) {
-        console.error('Error updating report:', reportError);
-        throw reportError;
+      if (reportUpdate.error) {
+        console.error('Error updating report:', reportUpdate.error);
+        throw reportUpdate.error;
       }
-      console.log('Successfully updated report status');
+
+      console.log('Successfully updated both item and report status');
 
       toast({
         title: "Status updated",
